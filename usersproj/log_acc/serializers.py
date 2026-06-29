@@ -2,6 +2,7 @@ from multiprocessing.context import AuthenticationError
 
 from rest_framework import serializers
 import bcrypt
+from rest_framework.response import Response
 
 from accounts.models import UserProfile
 
@@ -17,16 +18,16 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = UserProfile.objects.get(email=email)
         except:
-            raise AuthenticationError('User does not exist')
+            return Response({'error': 'User does not exist'})
 
         if user is None:
-            raise AuthenticationError('User does not exist')
+            return Response({'error': 'User does not exist'})
 
         if not user.is_active:
-            raise AuthenticationError('User is inactive')
+            return Response({'error': 'User is inactive'})
 
         if not bcrypt.checkpw(password, user.password.encode('utf-8')):
-            raise AuthenticationError('Password is incorrect')
+            return Response({'error': 'Password is incorrect'})
 
         attrs['user'] = user
         return attrs

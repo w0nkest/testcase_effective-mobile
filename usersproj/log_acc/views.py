@@ -1,6 +1,7 @@
 import datetime as dt
 
 from django.shortcuts import render
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,7 +19,14 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+
+        data = serializer.validated_data
+
+        try:
+            user = data['user']
+        except KeyError:
+            return Response({"error": "Cannot perform login"}, status=status.HTTP_404_NOT_FOUND)
+
 
         refresh_token_str, refresh_jti, refresh_exp, token_family = create_refresh_token(user.id)
 
@@ -70,5 +78,5 @@ class LogoutView(APIView):
         response = Response({'detail': 'Successfully logged out'}, status=200)
         response.delete_cookie('access_token')
 
-        return Response({'detail': 'Successfully logged out'}, status=200)
+        return response
 
